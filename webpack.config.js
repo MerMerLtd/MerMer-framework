@@ -18,7 +18,13 @@ const frontend = {
     path: path.resolve(__dirname, 'build/frontend'),
     filename: 'main.js',
     chunkFilename: '[id].js'
-  }
+  },
+  module: {
+  },
+  plugins: [
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NoEmitOnErrorsPlugin()
+  ]
 };
 
 const backend = {
@@ -53,6 +59,5 @@ const backend = {
 }
 
 module.exports = [
-  frontend,
-  backend
+  frontend
 ];

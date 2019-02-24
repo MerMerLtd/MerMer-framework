@@ -1,9 +1,10 @@
-import os from 'os';
-import fs from 'fs';
-import path from 'path';
-import { spawn } from 'child_process';
-import commandLineArgs from 'command-line-args';
-import Utils from './libs/Utils.js';
+#!/usr/bin/env node
+const os = require('os');
+const fs = require('fs');
+const path = require('path');
+const spawn = require('child_process').spawn;
+const commandLineArgs = require('command-line-args');
+const Utils = require(path.resolve(__dirname, '../src/backend/libs/Utils.js'));
 
 const optionDefinitions = [
   { name: 'configPath', alias: 'c', type: String },
@@ -17,8 +18,8 @@ const optionDefinitions = [
 ];
 
 const argv = commandLineArgs(optionDefinitions);
-const command = path.resolve(__dirname, 'start.js');
-const cfg = argv.configPath ? argv.configPath : path.resolve(__dirname, '../../private/config.toml');
+const command = path.resolve(__dirname, 'main.js');
+const cfg = argv.configPath ? argv.configPath : path.resolve(__dirname, '../private/config.toml');
 
 Utils.readConfig({ filePath: cfg })
 .then((config) => {

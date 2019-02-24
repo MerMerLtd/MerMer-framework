@@ -3,8 +3,8 @@
 title = "CafecaBackend"
 
 [base]
-folder = "CafecaBE"
-static = "/etc/findCafeca"
+folder = "MerMer-framework"
+static = "./build/frontend/"
 debug = false
 
 [blockchain]
