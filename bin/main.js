@@ -14,10 +14,10 @@ if(argvIndex > -1) {
   const projectArgv = process.argv[argvIndex + 1] || 'MerMerProject';
   const projectName = path.parse(projectArgv).name;
   const basePath = process.cwd();
+  const mermerPath = path.resolve(__dirname, '../');
   const projectPath = path.resolve(basePath, projectArgv);
   console.log(`\x1b[1m\x1b[32m${msg}\x1b[0m\x1b[21m ${projectName}`);
-  console.log(projectPath);
-  return ncp(basePath, projectPath, function (err) {
+  return ncp(mermerPath, projectPath, function (err) {
     if (err) {
       return console.error(err);
     }

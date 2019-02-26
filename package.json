@@ -1,6 +1,6 @@
 {
   "name": "mermer",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "description": "MerMer Framework for Front End and Back End",
   "main": "bin/main.js",
   "bin": {
