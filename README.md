@@ -21,3 +21,17 @@ vi /path/to/your/new/project/package.json
 cp /path/to/your/new/project/sample.config.toml /path/to/your/new/project/config.toml
 vi /path/to/your/new/project/config.toml
 ```
+```
+[api]
+pathname = [
+  "get | /,/version | Static.Utils.readPackageInfo"
+]
+
+# [method] | [path] | [execute function]
+```
+
+## Run Project
+```
+cd /path/to/your/new/project/
+bin/main.js
+```
