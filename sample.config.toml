@@ -15,9 +15,5 @@ type = "firebase"
 
 [api]
 pathname = [
-  "get | /,/version | Static.Utils.readPackageInfo",
-  "get | /api/questions | Bot.FindCafeca.getQuestions",
-  "get | /api/suggestion | Bot.FindCafeca.getSuggestion",
-  "get | /api/store/:storeID | Bot.FindCafeca.getStore",
-  "get | /policy/* | Static.Utils.readPackageInfo"
+  "get | /,/version | Static.Utils.readPackageInfo"
 ]
