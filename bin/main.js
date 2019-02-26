@@ -2,10 +2,30 @@
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
-const spawn = require('child_process').spawn;
+const { spawn } = require('child_process');
+const { ncp } = require('ncp');
 const commandLineArgs = require('command-line-args');
 const Utils = require(path.resolve(__dirname, '../src/backend/libs/Utils.js'));
 
+/* initial project */
+const argvIndex = process.argv.indexOf('init')
+if(argvIndex > -1) {
+  const msg = 'Initial Project';
+  const projectArgv = process.argv[argvIndex + 1] || 'MerMerProject';
+  const projectName = path.parse(projectArgv).name;
+  const basePath = process.cwd();
+  const projectPath = path.resolve(basePath, projectArgv);
+  console.log(`\x1b[1m\x1b[32m${msg}\x1b[0m\x1b[21m ${projectName}`);
+  console.log(projectPath);
+  return ncp(basePath, projectPath, function (err) {
+    if (err) {
+      return console.error(err);
+    }
+    console.log('done!');
+   });
+}
+
+/* normal process */
 const optionDefinitions = [
   { name: 'configPath', alias: 'c', type: String },
   { name: 'version', alias: 'v', type: Boolean },
