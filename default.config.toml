@@ -1,6 +1,6 @@
-# CafecaBackend Default Config
+# MerMer Default Config
 
-title = "CafecaBackend"
+title = "MerMer"
 
 [base]
 folder = "MerMer-framework"

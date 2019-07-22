@@ -4,6 +4,7 @@ const pem = require('pem');
 const http = require('http');
 const spdy  = require('spdy');
 const koa = require('koa');
+const session = require('koa-session');
 const Router = require('koa-router');
 const bodyParser = require('koa-body');
 const staticServe = require('koa-static');
@@ -17,7 +18,8 @@ const defaultHTTPS = [7788, 443];
 
 class Receptor extends Bot {
   constructor() {
-  	super();
+    super();
+    this.name = 'Receptor';
     this.router = new Router();
   }
 
@@ -31,6 +33,10 @@ class Receptor extends Bot {
     return super.start()
     .then(() => this.createPem())
     .then((options) => {
+      this.database.leveldb
+    })
+    .then((options) => {
+      const sessionSecret = dvalue.randomID(24);
       const app = new koa();
       app.use(staticServe(this.config.base.static))
          .use(bodyParser({ multipart: true }))
@@ -57,6 +63,7 @@ class Receptor extends Bot {
   }
 
   registerAll() {
+    console.log(this.config)
     return Promise.all(this.config.api.pathname.map((v) => {
       const args = v.split('|').map((v) => v.trim());
       const pathname = args[1].split(',').map((v) => v.trim());
@@ -91,11 +98,16 @@ class Receptor extends Bot {
         params: ctx.params,
         header: ctx.header,
         method: ctx.method,
-        query: ctx.query
+        query: ctx.query,
+        session: ctx.session,
+
       };
       return operation(inputs)
       .then((rs) => {
-      	ctx.body = rs;
+        ctx.set("Access-Control-Allow-Origin", "*");
+        ctx.set("Access-Control-Allow-Methods", "OPTIONS, GET, PUT, POST, DELETE");
+        ctx.set("Access-Control-Allow-Headers", "x-requested-with, accept, origin, content-type");
+        ctx.body = rs;
       	next();
       });
     });
@@ -111,32 +123,43 @@ class Receptor extends Bot {
 
   listenHttp({ port, options, callback }) {
   	return new Promise((resolve, reject) => {
-      const serverHTTP = http.createServer(options, callback);
-      serverHTTP.on('error', () => {
+      this.serverHTTP = this.serverHTTP || http.createServer(options, callback);
+      this.serverHTTP.on('error', () => {
         const newPort = defaultHTTP.pop();
         if(defaultHTTP.length == 0) {
           defaultHTTP.push(newPort + 1);
         }
-        this.listenHttp({ port: newPort, options, callback });
+        this.listenHttp({ port: newPort, options, callback }).then(resolve, reject);
       });
-      serverHTTP.listen(port, () => {
+      this.serverHTTP.listen(port, () => {
         this.logger.log('\x1b[1m\x1b[32mHTTP \x1b[0m\x1b[21m ', `http://127.0.0.1:${port}`);
+        resolve();
       });
     });
   }
 
   listenHttps({ port, options, callback }) {
-    const serverHTTPS = spdy.createServer(options, callback);
-    serverHTTPS.on('error', () => {
-      const newPort = defaultHTTPS.pop();
-      if(defaultHTTPS.length == 0) {
-      	defaultHTTPS.push(newPort + 1);
-      }
-      this.listenHttps({ port: newPort, options, callback });
+    return new Promise((resolve, reject) => {
+      this.serverHTTPS = this.serverHTTPS || spdy.createServer(options, callback);
+      this.serverHTTPS.on('error', () => {
+        const newPort = defaultHTTPS.pop();
+        if(defaultHTTPS.length == 0) {
+          defaultHTTPS.push(newPort + 1);
+        }
+        this.listenHttps({ port: newPort, options, callback }).then(resolve, reject);
+      });
+      this.serverHTTPS.listen(port, () => {
+        this.logger.log('\x1b[1m\x1b[32mHTTPS\x1b[0m\x1b[21m ', `https://127.0.0.1:${port}`);
+        resolve();
+      });
     });
-    serverHTTPS.listen(port, () => {
-      this.logger.log('\x1b[1m\x1b[32mHTTPS\x1b[0m\x1b[21m ', `http://127.0.0.1:${port}`);
-    });
+  }
+
+  get servers() {
+    return {
+      HTTP: this.serverHTTP,
+      HTTPS: this.serverHTTPS
+    };
   }
 }
 

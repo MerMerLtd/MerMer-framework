@@ -71,6 +71,73 @@ class Utils {
     }
     return result;
   }
+
+  static jsonStableStringify(obj, opts) {
+    if (!opts) opts = {};
+    if (typeof opts === 'function') opts = { cmp: opts };
+    let space = opts.space || '';
+    if (typeof space === 'number') space = Array(space+1).join(' ');
+    const cycles = (typeof opts.cycles === 'boolean') ? opts.cycles : false;
+    const replacer = opts.replacer || function(key, value) { return value; };
+  
+    const cmp = opts.cmp && (function (f) {
+      return (node) => {
+        (a, b) => {
+          const aobj = { key: a, value: node[a] };
+          const bobj = { key: b, value: node[b] };
+          return f(aobj, bobj);
+        };
+      };
+    })(opts.cmp);
+  
+    const seen = [];
+    return (function stringify(parent, key, node, level) {
+      const indent = space ? ('\n' + new Array(level + 1).join(space)) : '';
+      const colonSeparator = space ? ': ' : ':';
+  
+      if (node && node.toJSON && typeof node.toJSON === 'function') {
+        node = node.toJSON();
+      }
+  
+      node = replacer.call(parent, key, node);
+  
+      if (node === undefined) {
+        return;
+      }
+      if (typeof node !== 'object' || node === null) {
+        return JSON.stringify(node);
+      }
+      if (Array.isArray(node)) {
+        const out = [];
+        for (var i = 0; i < node.length; i++) {
+          const item = stringify(node, i, node[i], level+1) || JSON.stringify(null);
+          out.push(indent + space + item);
+        }
+        return '[' + out.join(',') + indent + ']';
+      } else {
+        if (seen.indexOf(node) !== -1) {
+          if (cycles) return JSON.stringify('__cycle__');
+            throw new TypeError('Converting circular structure to JSON');
+        } else {
+          seen.push(node);
+        }
+        const keys = Object.keys(node).sort(cmp && cmp(node));
+        const out = [];
+        for (var i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          const value = stringify(node, key, node[key], level+1);
+  
+          if(!value) continue;
+  
+          const keyValue = JSON.stringify(key) + colonSeparator + value;
+          out.push(indent + space + keyValue);
+        }
+        seen.splice(seen.indexOf(node), 1);
+        return '{' + out.join(',') + indent + '}';
+      }
+    })({ '': obj }, '', obj, 0);
+  };
+
   static toToml(data, notRoot) {
     let result;
     if(data instanceof Object || typeof data == 'object') {
@@ -106,7 +173,7 @@ class Utils {
   }
 
   static initialAll({ version, configPath }) {
-    const filePath = configPath ? configPath : path.resolve(__dirname, '../private/config.toml');
+    const filePath = configPath ? configPath : path.resolve(__dirname, '../../../private/config.toml');
     return this.readConfig({ filePath })
     .then((config) => {
       const rsConfig = config;
@@ -131,6 +198,11 @@ class Utils {
       logger: rs[3],
       i18n: rs[4]
     }))
+  }
+
+  static readJSON({ filePath }) {
+    return this.readFile({ filePath })
+    .then((data) => JSON.parse(data))
   }
 
   static readFile({ filePath }) {
@@ -159,11 +231,21 @@ class Utils {
     .then((packageInfo) => {
       const basePath = path.resolve(os.homedir(), packageInfo.name);
       return this.fileExists({ filePath })
-      .then((rs) => this.readFile({ filePath: rs ? 
-        filePath : 
-        path.resolve(__dirname, '../../../sample.config.toml') }))
-      .then((data) => {
-        config = toml.parse(data);
+      .then(async (rs) => {
+        const defaultCFGP = path.resolve(__dirname, '../../../default.config.toml');
+        const defaultCFGTOML = await this.readFile({ filePath: defaultCFGP });
+        const defaultCFG = toml.parse(defaultCFGTOML);
+        if(!rs) {
+          return Promise.resolve(defaultCFG);
+        } else {
+          const currentCFGP = filePath;
+          const currentCFGTOML = await this.readFile({ filePath: currentCFGP });
+          const currentCFG = toml.parse(currentCFGTOML);
+          return Promise.resolve(dvalue.default(currentCFG, defaultCFG));
+        }
+      })
+      .then((rs) => {
+        config = rs;
         config.packageInfo = packageInfo;
         config.runtime = {
           filePath,
@@ -177,11 +259,14 @@ class Utils {
     });
   }
 
+  static getConfig() {
+    return JSON.parse(process.env.MERMER || '{}');
+  }
+
   static readPackageInfo() {
     const filePath = path.resolve(__dirname, '../../../package.json');
-    return this.readFile({ filePath  })
-    .then((data) => {
-      const pkg = JSON.parse(data);
+    return this.readJSON({ filePath  })
+    .then((pkg) => {
       const packageInfo = {
         name: pkg.name,
         version: pkg.version,
@@ -340,7 +425,7 @@ class Utils {
   static initialLevel({ homeFolder }) {
     const dbPath = path.resolve(homeFolder, 'dataset');
     return this.initialFolder({ homeFolder: dbPath })
-    .then(() => level(dbPath));
+    .then(() => level(dbPath, { valueEncoding: 'json' }));
   }
 
   static initialDB({ database }) {
@@ -399,6 +484,7 @@ class Utils {
 
   static startBots({ Bots }) {
     return Promise.all(Bots.map((bot) => bot.start()))
+    .then(() => Promise.all(Bots.map((bot) => bot.ready())))
     .then(() => Bots );
   }
 
