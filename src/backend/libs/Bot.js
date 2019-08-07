@@ -33,10 +33,9 @@ class Bot {
     return new Promise((resolve, reject) => {
       db.put(key, value, (e) => {
         if(e) {
-          console.log('write err:', e);
+          this.logger.debug('write err:', e);
           reject(e);
         } else {
-          console.log('write ok');
           resolve(true);
         }
       });

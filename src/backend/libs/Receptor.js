@@ -63,7 +63,6 @@ class Receptor extends Bot {
   }
 
   registerAll() {
-    console.log(this.config)
     return Promise.all(this.config.api.pathname.map((v) => {
       const args = v.split('|').map((v) => v.trim());
       const pathname = args[1].split(',').map((v) => v.trim());
@@ -104,9 +103,6 @@ class Receptor extends Bot {
       };
       return operation(inputs)
       .then((rs) => {
-        ctx.set("Access-Control-Allow-Origin", "*");
-        ctx.set("Access-Control-Allow-Methods", "OPTIONS, GET, PUT, POST, DELETE");
-        ctx.set("Access-Control-Allow-Headers", "x-requested-with, accept, origin, content-type");
         ctx.body = rs;
       	next();
       });
