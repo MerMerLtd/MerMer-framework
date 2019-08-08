@@ -18,12 +18,14 @@ if(doInitial) {
   const mermerPath = path.resolve(__dirname, '../');
   const projectPath = path.resolve(basePath, projectArgv);
   console.log(`\x1b[1m\x1b[32m${msg}\x1b[0m\x1b[21m ${projectName}`);
-  return ncp(mermerPath, projectPath, function (err) {
+  ncp(mermerPath, projectPath, (err) => {
     if (err) {
-      return console.error(err);
+      console.error(err);
+      return;
     }
     console.log('done!');
-   });
+  });
+  return;
 }
 
 /* update project */
@@ -37,12 +39,19 @@ if(doUpdate) {
   const mermerPath = path.resolve(__dirname, '../');
   const projectPath = path.resolve(basePath, projectArgv);
   console.log(`\x1b[1m\x1b[32m${msg}\x1b[0m\x1b[21m ${projectName}`);
-  return ncp(mermerPath, projectPath, function (err) {
+  ncp(mermerPath, projectPath, {
+    filter: (source) => { 
+      return !/README.md$/.test(source) && 
+             !/package.json$/.test(source);
+    }
+  }, (err) => {
     if (err) {
-      return console.error(err);
+      console.error(err);
+      return;
     }
     console.log('done!');
-   });
+  });
+  return;
 }
 
 /* normal process */
