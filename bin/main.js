@@ -87,3 +87,4 @@ Utils.readConfig({ filePath: cfg })
     .catch((e) => { console.trace(e); })
   }
 })
+.catch(console.trace);

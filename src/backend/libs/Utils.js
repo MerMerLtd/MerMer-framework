@@ -198,6 +198,7 @@ class Utils {
       logger: rs[3],
       i18n: rs[4]
     }))
+    .catch(console.trace);
   }
 
   static readJSON({ filePath }) {
@@ -225,38 +226,41 @@ class Utils {
     })
   }
 
-  static readConfig({ filePath }) {
-    let config;
-    return this.readPackageInfo()
-    .then((packageInfo) => {
-      const basePath = path.resolve(os.homedir(), packageInfo.name);
-      return this.fileExists({ filePath })
-      .then(async (rs) => {
-        const defaultCFGP = path.resolve(__dirname, '../../../default.config.toml');
-        const defaultCFGTOML = await this.readFile({ filePath: defaultCFGP });
-        const defaultCFG = toml.parse(defaultCFGTOML);
-        if(!rs) {
-          return Promise.resolve(defaultCFG);
-        } else {
-          const currentCFGP = filePath;
-          const currentCFGTOML = await this.readFile({ filePath: currentCFGP });
-          const currentCFG = toml.parse(currentCFGTOML);
-          return Promise.resolve(dvalue.default(currentCFG, defaultCFG));
-        }
-      })
-      .then((rs) => {
-        config = rs;
-        config.packageInfo = packageInfo;
-        config.runtime = {
-          filePath,
-          startTime: new Date().getTime()
-        };
-        config.homeFolder = config.base.folder ?
-          path.resolve(basePath, config.base.folder) :
-          basePath;
-        return Promise.resolve(config);
-      })
-    });
+  static async readConfig({ filePath }) {
+    let config, defaultCFG, currentCFG;
+  
+    const packageInfo = await this.readPackageInfo();
+    const basePath = path.resolve(os.homedir(), packageInfo.name);
+    const fileExists = await this.fileExists({ filePath });
+    const defaultCFGP = path.resolve(__dirname, '../../../default.config.toml');
+    const defaultCFGTOML = await this.readFile({ filePath: defaultCFGP });
+    try {
+      defaultCFG = toml.parse(defaultCFGTOML);
+    } catch(e) {
+      return Promise.reject(new Error(`Invalid config file: ${defaultCFGP}`));
+    }
+
+    if(!fileExists) {
+      config = defaultCFG
+    } else {
+      const currentCFGP = filePath;
+      const currentCFGTOML = await this.readFile({ filePath: currentCFGP });
+      try {
+        currentCFG = toml.parse(currentCFGTOML);
+      } catch(e) {
+        return Promise.reject(new Error(`Invalid config file: ${currentCFGP}`));
+      }
+      config = dvalue.default(currentCFG, defaultCFG);
+    }
+    config.packageInfo = packageInfo;
+    config.runtime = {
+      filePath,
+      startTime: new Date().getTime()
+    };
+    config.homeFolder = config.base.folder ?
+      path.resolve(basePath, config.base.folder) :
+      basePath;
+    return Promise.resolve(config);
   }
 
   static getConfig() {
