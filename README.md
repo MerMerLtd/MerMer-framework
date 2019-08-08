@@ -18,8 +18,8 @@ vi /path/to/your/new/project/package.json
 
 ### edit config
 ```shell
-cp /path/to/your/new/project/sample.config.toml /path/to/your/new/project/config.toml
-vi /path/to/your/new/project/config.toml
+cp /path/to/your/new/project/default.config.toml /path/to/your/new/project/private/config.toml
+vi /path/to/your/new/project/private/config.toml
 ```
 ```toml
 [api]
@@ -33,5 +33,6 @@ pathname = [
 ## Run Project
 ```
 cd /path/to/your/new/project/
-bin/main.js
+npm install
+npm start
 ```
