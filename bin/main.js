@@ -42,7 +42,8 @@ if(doUpdate) {
   ncp(mermerPath, projectPath, {
     filter: (source) => { 
       return !/README.md$/.test(source) && 
-             !/package.json$/.test(source);
+             !/package.json$/.test(source) &&
+             !/LICENSE$/.test(source);
     }
   }, (err) => {
     if (err) {

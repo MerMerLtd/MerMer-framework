@@ -36,3 +36,11 @@ cd /path/to/your/new/project/
 npm install
 npm start
 ```
+
+## Update Project with new version of MerMer-framework and Run
+```
+mermer update /path/to/your/new/project/
+cd /path/to/your/new/project/
+npm rebuild
+npm start
+```
