@@ -8,9 +8,27 @@ const commandLineArgs = require('command-line-args');
 const Utils = require(path.resolve(__dirname, '../src/backend/libs/Utils.js'));
 
 /* initial project */
-const argvIndex = process.argv.indexOf('init')
-if(argvIndex > -1) {
+const doInitial = process.argv.indexOf('init') > -1;
+if(doInitial) {
   const msg = 'Initial Project';
+  const projectArgv = process.argv[argvIndex + 1] || 'MerMerProject';
+  const projectName = path.parse(projectArgv).name;
+  const basePath = process.cwd();
+  const mermerPath = path.resolve(__dirname, '../');
+  const projectPath = path.resolve(basePath, projectArgv);
+  console.log(`\x1b[1m\x1b[32m${msg}\x1b[0m\x1b[21m ${projectName}`);
+  return ncp(mermerPath, projectPath, function (err) {
+    if (err) {
+      return console.error(err);
+    }
+    console.log('done!');
+   });
+}
+
+/* update project */
+const doUpdate = process.argv.indexOf('update') > -1;
+if(doUpdate) {
+  const msg = 'Update Project';
   const projectArgv = process.argv[argvIndex + 1] || 'MerMerProject';
   const projectName = path.parse(projectArgv).name;
   const basePath = process.cwd();
