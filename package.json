@@ -1,6 +1,6 @@
 {
   "name": "mermer",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "MerMer Framework for Front End and Back End",
   "main": "bin/main.js",
   "bin": {
@@ -35,7 +35,7 @@
     "koa-router": "^7.4.0",
     "koa-session": "^5.10.1",
     "koa-static": "^5.0.0",
-    "level": "^4.0.0",
+    "level": "^7.0.1",
     "mongodb": "^3.1.13",
     "ncp": "^2.0.0",
     "pem": "^1.14.2",
